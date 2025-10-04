@@ -1,28 +1,34 @@
-package org.firstinspires.ftc.teamcode.ValerieStuffs.ColorSensor;
-
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-
-@TeleOp
-public class ColorSensorTest2_2 extends LinearOpMode{
-    ColorSensorTest2_1 colorSensorTest2_1 = new ColorSensorTest2_1();
-    @Override
-    public void init(){
-        colorSensorTest2_1.init(hardwareMap);
-    }
-    @Override
-    public void loop(){
-        colorSensorTest2_1.getDetectedColor(telemetry);
-    }
-}
-/*
-    CALIBRATION VALUES:
-    Green
-        1cm -
-        5cm -
-        10cm -
-    Purple
-        1cm -
-        5cm -
-        10cm -
- */
+//package org.firstinspires.ftc.teamcode.ValerieStuffs.ColorSensor;
+//
+//import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+//import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+//
+//@TeleOp
+//public class ColorSensorTest2_2 extends LinearOpMode{
+//    ColorSensorTest2_1 colorSensorTest2_1 = new ColorSensorTest2_1();
+//
+//    @Override
+//    public void runOpMode() throws InterruptedException {
+//
+//    }
+//
+////    @Override
+////    public void init(){
+////        colorSensorTest2_1.init(hardwareMap);
+////    }
+//    @Override
+//    public void loop(){
+//        colorSensorTest2_1.getDetectedColor(telemetry);
+//    }
+//}
+///*
+//    CALIBRATION VALUES:
+//    Green
+//        1cm -
+//        5cm -
+//        10cm -
+//    Purple
+//        1cm -
+//        5cm -
+//        10cm -
+// */
