@@ -23,7 +23,6 @@ public class ColorSensorTest1 extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         waitForStart();
     }
-
     public enum DetectedColor{
         GREEN,
         PURPLE,
