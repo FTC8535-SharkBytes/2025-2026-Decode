@@ -1,0 +1,52 @@
+/*package org.firstinspires.ftc.teamcode;
+
+public class AprilTagTest {
+    package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.opmode.LinearOpMode;
+import com.qualcomm.robotcore.opmode.TeleOp;
+
+
+    @TeleOp
+    public class AprilTagMinimal extends LinearOpMode {
+
+        private VisionPortal visionPortal;
+        private AprilTagProcessor aprilTag;
+
+        @Override
+        public void runOpMode() {
+            AprilTagProcessor processor = new AprilTagProcessor.Builder();
+            processor.setDrawAxes(true);
+            processor.setDrawCubeProtection(true);
+            processor.setDrawTagID(true);
+            processor.setDrawTagOutline(true);
+            processor.build();
+            VisionPortal portal = new VisionPortal.Builder();
+            portal.setCamera(hardwareMap.get(WebcamName.class, "Camera"));
+            portal.addProcessor(aprilTag);
+            portal.build();
+            telemetry.addLine("AprilTag detection ready");
+            telemetry.update();
+            waitForStart();
+            while (opModeIsActive()) {
+                if (!aprilTag.getDetections().isEmpty()) {
+                    var tag = aprilTag.getDetections().get(0); // Just grab the first one
+
+                    telemetry.addData("ID", tag.id);
+                    telemetry.addData("X", "%.1f in", tag.ftcPose.x);
+                    telemetry.addData("Y", "%.1f in", tag.ftcPose.y);
+                    telemetry.addData("Z", "%.1f in", tag.ftcPose.z);
+                    telemetry.addData("Yaw", "%.1f°", tag.ftcPose.yaw);
+                    telemetry.addData("Pitch", "%.1f°", tag.ftcPose.pitch);
+                    telemetry.addData("Roll", "%.1f°", tag.ftcPose.roll);
+                } else {
+                    telemetry.addLine("No tags visible");
+                }
+
+                telemetry.update();
+                sleep(100);
+            }
+        }
+    }
+}
+*/
