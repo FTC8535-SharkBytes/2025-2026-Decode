@@ -33,9 +33,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
 
 /*
@@ -57,7 +55,8 @@ public class ShooterOpMode extends LinearOpMode {
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
-    private DcMotorEx leftDrive = null;
+    private DcMotorEx shooterMotor = null;
+    private double desiredVelocity = 0.9*100*28;
 
 
     @Override
@@ -68,14 +67,14 @@ public class ShooterOpMode extends LinearOpMode {
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        leftDrive  = hardwareMap.get(DcMotorEx.class, "left_drive");
+        shooterMotor = hardwareMap.get(DcMotorEx.class, "left_drive");
 
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
-        leftDrive.setDirection(DcMotorEx.Direction.FORWARD);
-        leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterMotor.setDirection(DcMotorEx.Direction.REVERSE);
+        shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
 
@@ -84,23 +83,40 @@ public class ShooterOpMode extends LinearOpMode {
         runtime.reset();
 
         // run until the end of the match (driver presses STOP)
+        boolean bIsPressed = false;
+        boolean xIsPressed = false;
         while (opModeIsActive()) {
 
-            if (gamepad1.left_bumper) {
 
-                //sets velocity
-                leftDrive.setVelocity(0.9*100*28);
+
+            if (gamepad1.y) {
+                shooterMotor.setVelocity(desiredVelocity);
             }
-            else {
-                leftDrive.setVelocity(0);
+            if (gamepad1.a) {
+                shooterMotor.setVelocity(0);
+            }
+            //increases velocity
+            if (gamepad1.x && !xIsPressed){
+                xIsPressed = true;
+                desiredVelocity += 100;
+            }
+            if (!gamepad1.x && xIsPressed) {
+                xIsPressed = false;
+            }
+            //decreases velocity
+            if (gamepad1.b && !bIsPressed){
+                bIsPressed = true;
+                desiredVelocity -= 100;
+            }
+            if (!gamepad1.b && bIsPressed){
+                bIsPressed = false;
             }
 
 
 
-
-                // Show the elapsed game time and wheel power.
+            // Show the elapsed game time and wheel power.
                 telemetry.addData("Status", "Run Time: " + runtime.toString());
-                telemetry.addData("Motors", "left (%.2f), right (%.2f)");
+                telemetry.addData("Velocity", shooterMotor.getVelocity());
                 telemetry.update();
         }
     }
