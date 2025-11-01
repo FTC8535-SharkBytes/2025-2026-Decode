@@ -33,6 +33,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 
@@ -56,6 +57,7 @@ public class ShooterOpMode extends LinearOpMode {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotorEx shooterMotor = null;
+    private DcMotor bellyMotor = null;
     private double desiredVelocity = 0.9*100*28;
 
 
@@ -67,14 +69,15 @@ public class ShooterOpMode extends LinearOpMode {
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        shooterMotor = hardwareMap.get(DcMotorEx.class, "left_drive");
-
+        shooterMotor = hardwareMap.get(DcMotorEx.class, "shooter_motor");
+        bellyMotor = hardwareMap.get(DcMotor.class, "belly_motor");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
         shooterMotor.setDirection(DcMotorEx.Direction.REVERSE);
         shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        bellyMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
 
 
@@ -89,28 +92,35 @@ public class ShooterOpMode extends LinearOpMode {
 
 
 
-            if (gamepad1.y) {
+            if (gamepad2.y) {
                 shooterMotor.setVelocity(desiredVelocity);
             }
-            if (gamepad1.a) {
+            if (gamepad2.a) {
                 shooterMotor.setVelocity(0);
             }
             //increases velocity
-            if (gamepad1.x && !xIsPressed){
+            if (gamepad2.x && !xIsPressed){
                 xIsPressed = true;
                 desiredVelocity += 100;
             }
-            if (!gamepad1.x && xIsPressed) {
+            if (!gamepad2.x && xIsPressed) {
                 xIsPressed = false;
             }
             //decreases velocity
-            if (gamepad1.b && !bIsPressed){
+            if (gamepad2.b && !bIsPressed){
                 bIsPressed = true;
                 desiredVelocity -= 100;
             }
-            if (!gamepad1.b && bIsPressed){
+            if (!gamepad2.b && bIsPressed){
                 bIsPressed = false;
             }
+            if (gamepad2.dpad_up){
+                bellyMotor.setPower(1);
+            }
+            if (gamepad2.dpad_down){
+                bellyMotor.setPower(0);
+            }
+
 
 
 
