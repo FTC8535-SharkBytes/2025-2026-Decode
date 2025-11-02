@@ -14,10 +14,10 @@ public class Servo_Motors extends LinearOpMode {
     private Servo feeder;
 
     // define servo positions
-    private final double LEFTINTAKE_UP = 1.0;
+    private final double LEFTINTAKE_UP = 0.25                       ;
     private final double LEFTINTAKE_DOWN = 0.0;
-    private final double RIGHTINTAKE_UP = 1.0;
-    private final double RIGHTINTAKE_DOWN = 0.0;
+    private final double RIGHTINTAKE_UP = 0.0;
+    private final double RIGHTINTAKE_DOWN = 0.25;
     private final double SHOOTER_HOOD_UP = 1.0;
     private final double SHOOTER_HOOD_DOWN = 0;
     private final double FEEDER_UP = 1.0;
@@ -30,6 +30,11 @@ public class Servo_Motors extends LinearOpMode {
         rightIntake = hardwareMap.get(Servo.class, "servo_right_intake");
         shooterHood = hardwareMap.get(Servo.class, "servo_left_outtake");
         feeder = hardwareMap.get(Servo.class, "servo_right_outtake");
+
+        leftIntake.setPosition(LEFTINTAKE_DOWN);
+        rightIntake.setPosition(RIGHTINTAKE_DOWN);
+        shooterHood.setPosition(SHOOTER_HOOD_DOWN);
+        feeder.setPosition(FEEDER_DOWN);
 
         telemetry.addLine("Ready to start");
         telemetry.update();
