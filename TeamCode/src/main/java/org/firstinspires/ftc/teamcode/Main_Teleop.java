@@ -21,6 +21,7 @@ public class Main_Teleop extends LinearOpMode {
     // --- Shooter system ---
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotorEx shooterMotor = null;
+    private DcMotor intakeMotor = null;
     private DcMotor bellyMotor = null;
     private double desiredVelocity = 0.9 * 100 * 28; // 90% of base target speed
     private boolean bIsPressed = false;
@@ -33,14 +34,14 @@ public class Main_Teleop extends LinearOpMode {
     private Servo feeder;
 
     // Servo positions
-    private final double LEFTINTAKE_UP = 0.25;
-    private final double LEFTINTAKE_DOWN = 0.0;
+    private final double LEFTINTAKE_DOWN = 0.25;
+    private final double LEFTINTAKE_UP = 0.0;
     private final double RIGHTINTAKE_UP = 0.0;
     private final double RIGHTINTAKE_DOWN = 0.25;
-    private final double SHOOTER_HOOD_UP = 1.0;
-    private final double SHOOTER_HOOD_DOWN = 0.0;
-    private final double FEEDER_UP = 1.0;
-    private final double FEEDER_DOWN = 0.0;
+    private final double SHOOTER_HOOD_UP = 0.31;
+    private final double SHOOTER_HOOD_DOWN = 0.07;
+    private final double FEEDER_DOWN = 0.3;
+    private final double FEEDER_UP = 0.05;
 
     @Override
     public void runOpMode() {
@@ -51,20 +52,22 @@ public class Main_Teleop extends LinearOpMode {
         // --- Initialize shooter hardware ---
         shooterMotor = hardwareMap.get(DcMotorEx.class, "shooter_motor");
         bellyMotor = hardwareMap.get(DcMotor.class, "belly_motor");
+        intakeMotor = hardwareMap.get(DcMotor.class,"intake_motor");
 
-        shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        shooterMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        bellyMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        bellyMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        intakeMotor.setDirection(DcMotorSimple.Direction.FORWARD);
 
         // --- Initialize servos ---
-        leftIntake = hardwareMap.get(Servo.class, "servo_left_intake");
-        rightIntake = hardwareMap.get(Servo.class, "servo_right_intake");
-        shooterHood = hardwareMap.get(Servo.class, "servo_left_outtake");
-        feeder = hardwareMap.get(Servo.class, "servo_right_outtake");
+        leftIntake = hardwareMap.get(Servo.class, "left_intake_servo");
+        rightIntake = hardwareMap.get(Servo.class, "right_intake_servo");
+        shooterHood = hardwareMap.get(Servo.class, "shooter_hood_servo");
+        feeder = hardwareMap.get(Servo.class, "feeder_servo");
 
         // set initial positions
-        leftIntake.setPosition(LEFTINTAKE_DOWN);
-        rightIntake.setPosition(RIGHTINTAKE_DOWN);
+        leftIntake.setPosition(LEFTINTAKE_UP);
+        rightIntake.setPosition(RIGHTINTAKE_UP);
         shooterHood.setPosition(SHOOTER_HOOD_DOWN);
         feeder.setPosition(FEEDER_DOWN);
 
@@ -86,18 +89,18 @@ public class Main_Teleop extends LinearOpMode {
             // --- Servo controls (gamepad1 buttons) ---
             // Intake control
             if (gamepad1.x) { // raise intake
-                leftIntake.setPosition(LEFTINTAKE_UP);
-                rightIntake.setPosition(RIGHTINTAKE_UP);
-            } else if (gamepad1.y) { // lower intake
                 leftIntake.setPosition(LEFTINTAKE_DOWN);
                 rightIntake.setPosition(RIGHTINTAKE_DOWN);
+            } else if (gamepad1.y) { // lower intake
+                leftIntake.setPosition(LEFTINTAKE_UP);
+                rightIntake.setPosition(RIGHTINTAKE_UP);
             }
 
             // Feeder control
             if (gamepad1.a) {
-                feeder.setPosition(FEEDER_UP);
-            } else if (gamepad1.b) {
                 feeder.setPosition(FEEDER_DOWN);
+            } else if (gamepad1.b) {
+                feeder.setPosition(FEEDER_UP);
             }
 
             // Shooter hood control
@@ -107,7 +110,7 @@ public class Main_Teleop extends LinearOpMode {
                 shooterHood.setPosition(SHOOTER_HOOD_DOWN);
             }
 
-            // --- Shooter motor control (gamepad2) ---
+            // --- Shooter motor belly motor and intake motor control (gamepad2) ---
             if (gamepad2.y) {
                 shooterMotor.setVelocity(desiredVelocity);
             }
@@ -115,7 +118,7 @@ public class Main_Teleop extends LinearOpMode {
                 shooterMotor.setVelocity(0);
             }
 
-            // Increase/decrease velocity
+            // Increase velocity
             if (gamepad2.x && !xIsPressed) {
                 xIsPressed = true;
                 desiredVelocity += 100;
@@ -123,7 +126,7 @@ public class Main_Teleop extends LinearOpMode {
             if (!gamepad2.x && xIsPressed) {
                 xIsPressed = false;
             }
-
+            // Decrease velocity
             if (gamepad2.b && !bIsPressed) {
                 bIsPressed = true;
                 desiredVelocity -= 100;
@@ -137,6 +140,13 @@ public class Main_Teleop extends LinearOpMode {
                 bellyMotor.setPower(1);
             } else if (gamepad2.dpad_down) {
                 bellyMotor.setPower(0);
+            }
+            //intake motor
+            if (gamepad2.dpad_right) {
+                intakeMotor.setPower(1);
+            }
+            else if (!gamepad2.dpad_right) {
+                intakeMotor.setPower(0);
             }
 
             // --- Telemetry ---
