@@ -57,7 +57,7 @@ public class Main_Teleop extends LinearOpMode {
         shooterMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         bellyMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        intakeMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // --- Initialize servos ---
         leftIntake = hardwareMap.get(Servo.class, "left_intake_servo");
