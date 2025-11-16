@@ -8,10 +8,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-
-
-import org.firstinspires.ftc.teamcode.nisaandvalerie.mechanumstuffthings.DrivingControllerThingyYay;
-
 @TeleOp(name="Main TeleOp (Drive + Shooter + Servos)")
 public class Main_Teleop extends LinearOpMode {
 
@@ -88,30 +84,30 @@ public class Main_Teleop extends LinearOpMode {
 
             // --- Servo controls (gamepad1 buttons) ---
             // Intake control
-            if (gamepad1.x) { // raise intake
+            if (gamepad2.dpad_right) { // raise intake
                 leftIntake.setPosition(LEFTINTAKE_DOWN);
                 rightIntake.setPosition(RIGHTINTAKE_DOWN);
-            } else if (gamepad1.y) { // lower intake
+            } else if (gamepad2.dpad_left) { // lower intake
                 leftIntake.setPosition(LEFTINTAKE_UP);
                 rightIntake.setPosition(RIGHTINTAKE_UP);
             }
 
             // Feeder control
-            if (gamepad1.a) {
-                feeder.setPosition(FEEDER_DOWN);
-            } else if (gamepad1.b) {
+            if (gamepad1.b) {
                 feeder.setPosition(FEEDER_UP);
+            } else {
+                feeder.setPosition(FEEDER_DOWN);
             }
 
             // Shooter hood control
-            if (gamepad1.dpad_up) {
+            if (gamepad2.dpad_up) {
                 shooterHood.setPosition(SHOOTER_HOOD_UP);
-            } else if (gamepad1.dpad_down) {
+            } else if (gamepad2.dpad_down) {
                 shooterHood.setPosition(SHOOTER_HOOD_DOWN);
             }
 
             // --- Shooter motor belly motor and intake motor control (gamepad2) ---
-            if (gamepad2.y) {
+            if (gamepad2.x) {
                 shooterMotor.setVelocity(desiredVelocity);
             }
             if (gamepad2.a) {
@@ -119,33 +115,33 @@ public class Main_Teleop extends LinearOpMode {
             }
 
             // Increase velocity
-            if (gamepad2.x && !xIsPressed) {
+            if (gamepad2.right_trigger > 0.1 && !xIsPressed) {
                 xIsPressed = true;
                 desiredVelocity += 100;
             }
-            if (!gamepad2.x && xIsPressed) {
+            if (gamepad2.right_trigger < 0.1 && xIsPressed) {
                 xIsPressed = false;
             }
             // Decrease velocity
-            if (gamepad2.b && !bIsPressed) {
+            if (gamepad2.left_trigger > 0.1 && !bIsPressed) {
                 bIsPressed = true;
                 desiredVelocity -= 100;
             }
-            if (!gamepad2.b && bIsPressed) {
+            if (gamepad2.left_trigger < 0.1 && bIsPressed) {
                 bIsPressed = false;
             }
 
             // Belly motor controls
-            if (gamepad2.dpad_up) {
+            if (gamepad2.y) {
                 bellyMotor.setPower(1);
-            } else if (gamepad2.dpad_down) {
+            } else {
                 bellyMotor.setPower(0);
             }
             //intake motor
-            if (gamepad2.dpad_right) {
+            if (gamepad2.b) {
                 intakeMotor.setPower(1);
             }
-            else if (!gamepad2.dpad_right) {
+            else {
                 intakeMotor.setPower(0);
             }
 
