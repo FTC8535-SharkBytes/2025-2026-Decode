@@ -11,14 +11,22 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 @TeleOp(name="Main TeleOp (Drive + Shooter + Servos)")
 public class Main_Teleop extends LinearOpMode {
 
+
+
     // --- Drive system ---
     private final DrivingControllerThingyYay driveControllerThingy = new DrivingControllerThingyYay();
+
+    private LookupTable lookupTable = new LookupTable(
+            new double[]{1320, 1320, 1370, 1420, 1520, 1620, 2320},
+            20,
+            100
+    );
 
     // --- Shooter system ---
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotorEx shooterMotor = null;
     private DcMotor intakeMotor = null;
-    private DcMotor bellyMotor = null;
+    private DcMotorEx bellyMotor = null;
     private double desiredVelocity = 0.9 * 100 * 28; // 90% of base target speed
     private boolean bIsPressed = false;
     private boolean xIsPressed = false;
@@ -47,11 +55,12 @@ public class Main_Teleop extends LinearOpMode {
 
         // --- Initialize shooter hardware ---
         shooterMotor = hardwareMap.get(DcMotorEx.class, "shooter_motor");
-        bellyMotor = hardwareMap.get(DcMotor.class, "belly_motor");
+        bellyMotor = hardwareMap.get(DcMotorEx.class, "belly_motor");
         intakeMotor = hardwareMap.get(DcMotor.class,"intake_motor");
 
         shooterMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        bellyMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         bellyMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -108,6 +117,7 @@ public class Main_Teleop extends LinearOpMode {
 
             // --- Shooter motor belly motor and intake motor control (gamepad2) ---
             if (gamepad2.x) {
+
                 shooterMotor.setVelocity(desiredVelocity);
             }
             if (gamepad2.a) {
@@ -133,9 +143,9 @@ public class Main_Teleop extends LinearOpMode {
 
             // Belly motor controls
             if (gamepad2.y) {
-                bellyMotor.setPower(1);
+                bellyMotor.setVelocity(300);
             } else {
-                bellyMotor.setPower(0);
+                bellyMotor.setVelocity(0);
             }
             //intake motor
             if (gamepad2.b) {
