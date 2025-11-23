@@ -17,7 +17,9 @@ public class Main_Teleop extends LinearOpMode {
     private final DrivingControllerThingyYay driveControllerThingy = new DrivingControllerThingyYay();
 
     private LookupTable lookupTable = new LookupTable(
-            new double[]{1320, 1320, 1370, 1420, 1520, 1620, 2320},
+            new double[]{1302, 1308.595, 1316.08, 1324.455, 1333.72, 1343.875, 1354.92, 1366.855, 1379.68, 1393.395, 1408, 1423.495, 1439.88, 1457.155, 1475.32, 1494.375, 1514.32, 1535.155, 1556.88, 1579.495,
+                    1603, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2302.195,
+                    2345.28},
             20,
             100
     );
@@ -96,6 +98,7 @@ public class Main_Teleop extends LinearOpMode {
             if (gamepad2.dpad_right) { // raise intake
                 leftIntake.setPosition(LEFTINTAKE_DOWN);
                 rightIntake.setPosition(RIGHTINTAKE_DOWN);
+                shooterHood.setPosition(SHOOTER_HOOD_DOWN);
             } else if (gamepad2.dpad_left) { // lower intake
                 leftIntake.setPosition(LEFTINTAKE_UP);
                 rightIntake.setPosition(RIGHTINTAKE_UP);
@@ -128,6 +131,7 @@ public class Main_Teleop extends LinearOpMode {
             if (gamepad2.right_trigger > 0.1 && !xIsPressed) {
                 xIsPressed = true;
                 desiredVelocity += 100;
+                shooterMotor.setVelocity(desiredVelocity);
             }
             if (gamepad2.right_trigger < 0.1 && xIsPressed) {
                 xIsPressed = false;
@@ -136,6 +140,7 @@ public class Main_Teleop extends LinearOpMode {
             if (gamepad2.left_trigger > 0.1 && !bIsPressed) {
                 bIsPressed = true;
                 desiredVelocity -= 100;
+                shooterMotor.setVelocity(desiredVelocity);
             }
             if (gamepad2.left_trigger < 0.1 && bIsPressed) {
                 bIsPressed = false;
