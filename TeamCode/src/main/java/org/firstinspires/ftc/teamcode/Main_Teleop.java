@@ -2,37 +2,173 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.nisaandvalerie.mechanumstuffthings.DrivingControllerThingyYay;
-
-@TeleOp
+@TeleOp(name="Main TeleOp (Drive + Shooter + Servos)")
 public class Main_Teleop extends LinearOpMode {
 
+
+
+    // --- Drive system ---
     private final DrivingControllerThingyYay driveControllerThingy = new DrivingControllerThingyYay();
 
-    boolean clawClosed = true;
+    private LookupTable lookupTable = new LookupTable(
+            new double[]{1302, 1308.595, 1316.08, 1324.455, 1333.72, 1343.875, 1354.92, 1366.855, 1379.68, 1393.395, 1408, 1423.495, 1439.88, 1457.155, 1475.32, 1494.375, 1514.32, 1535.155, 1556.88, 1579.495,
+                    1603, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2302.195,
+                    2345.28},
+            20,
+            100
+    );
+
+    // --- Shooter system ---
+    private ElapsedTime runtime = new ElapsedTime();
+    private DcMotorEx shooterMotor = null;
+    private DcMotor intakeMotor = null;
+    private DcMotorEx bellyMotor = null;
+    private double desiredVelocity = 0.9 * 100 * 28; // 90% of base target speed
+    private boolean bIsPressed = false;
+    private boolean xIsPressed = false;
+
+    // --- Servo system ---
+    private Servo leftIntake;
+    private Servo rightIntake;
+    private Servo shooterHood;
+    private Servo feeder;
+
+    // Servo positions
+    private final double LEFTINTAKE_DOWN = 0.25;
+    private final double LEFTINTAKE_UP = 0.0;
+    private final double RIGHTINTAKE_UP = 0.0;
+    private final double RIGHTINTAKE_DOWN = 0.25;
+    private final double SHOOTER_HOOD_UP = 0.31;
+    private final double SHOOTER_HOOD_DOWN = 0.07;
+    private final double FEEDER_DOWN = 0.3;
+    private final double FEEDER_UP = 0.05;
 
     @Override
     public void runOpMode() {
 
+        // --- Initialize drive ---
         driveControllerThingy.init(hardwareMap, telemetry, false);
 
-        waitForStart();
+        // --- Initialize shooter hardware ---
+        shooterMotor = hardwareMap.get(DcMotorEx.class, "shooter_motor");
+        bellyMotor = hardwareMap.get(DcMotorEx.class, "belly_motor");
+        intakeMotor = hardwareMap.get(DcMotor.class,"intake_motor");
 
+        shooterMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        bellyMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        bellyMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        // --- Initialize servos ---
+        leftIntake = hardwareMap.get(Servo.class, "left_intake_servo");
+        rightIntake = hardwareMap.get(Servo.class, "right_intake_servo");
+        shooterHood = hardwareMap.get(Servo.class, "shooter_hood_servo");
+        feeder = hardwareMap.get(Servo.class, "feeder_servo");
+
+        // set initial positions
+        leftIntake.setPosition(LEFTINTAKE_UP);
+        rightIntake.setPosition(RIGHTINTAKE_UP);
+        shooterHood.setPosition(SHOOTER_HOOD_DOWN);
+        feeder.setPosition(FEEDER_DOWN);
+
+        telemetry.addLine("Initialized: Drive + Shooter + Servos");
+        telemetry.update();
+
+        waitForStart();
+        runtime.reset();
 
         while (opModeIsActive()) {
-
-
-            // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
-            double axial   = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
-            double lateral =  gamepad1.left_stick_x;
-            double yaw     =  gamepad1.right_stick_x;
+            // --- Driving control (gamepad1 joysticks) ---
+            double axial   = -gamepad1.left_stick_y;  // forward/back
+            double lateral =  gamepad1.left_stick_x;  // strafe
+            double yaw     =  gamepad1.right_stick_x; // turn
 
             boolean isFastMode = (gamepad1.right_trigger != 1);
-
             driveControllerThingy.updateDriveCommands(axial, lateral, yaw, isFastMode);
+
+            // --- Servo controls (gamepad1 buttons) ---
+            // Intake control
+            if (gamepad2.dpad_right) { // raise intake
+                leftIntake.setPosition(LEFTINTAKE_DOWN);
+                rightIntake.setPosition(RIGHTINTAKE_DOWN);
+                shooterHood.setPosition(SHOOTER_HOOD_DOWN);
+            } else if (gamepad2.dpad_left) { // lower intake
+                leftIntake.setPosition(LEFTINTAKE_UP);
+                rightIntake.setPosition(RIGHTINTAKE_UP);
+            }
+
+            // Feeder control
+            if (gamepad1.b) {
+                feeder.setPosition(FEEDER_UP);
+            } else {
+                feeder.setPosition(FEEDER_DOWN);
+            }
+
+            // Shooter hood control
+            if (gamepad2.dpad_up) {
+                shooterHood.setPosition(SHOOTER_HOOD_UP);
+            } else if (gamepad2.dpad_down) {
+                shooterHood.setPosition(SHOOTER_HOOD_DOWN);
+            }
+
+            // --- Shooter motor belly motor and intake motor control (gamepad2) ---
+            if (gamepad2.x) {
+
+                shooterMotor.setVelocity(desiredVelocity);
+            }
+            if (gamepad2.a) {
+                shooterMotor.setVelocity(0);
+            }
+
+            // Increase velocity
+            if (gamepad2.right_trigger > 0.1 && !xIsPressed) {
+                xIsPressed = true;
+                desiredVelocity += 100;
+                shooterMotor.setVelocity(desiredVelocity);
+            }
+            if (gamepad2.right_trigger < 0.1 && xIsPressed) {
+                xIsPressed = false;
+            }
+            // Decrease velocity
+            if (gamepad2.left_trigger > 0.1 && !bIsPressed) {
+                bIsPressed = true;
+                desiredVelocity -= 100;
+                shooterMotor.setVelocity(desiredVelocity);
+            }
+            if (gamepad2.left_trigger < 0.1 && bIsPressed) {
+                bIsPressed = false;
+            }
+
+            // Belly motor controls
+            if (gamepad2.y) {
+                bellyMotor.setVelocity(300);
+            } else {
+                bellyMotor.setVelocity(0);
+            }
+            //intake motor
+            if (gamepad2.b) {
+                intakeMotor.setPower(1);
+            }
+            else {
+                intakeMotor.setPower(0);
+            }
+
+            // --- Telemetry ---
+            telemetry.addData("Status", "Run Time: " + runtime.toString());
+            telemetry.addData("Shooter Velocity", shooterMotor.getVelocity());
+            telemetry.addData("Desired Velocity", desiredVelocity);
+            telemetry.addData("Left Intake", leftIntake.getPosition());
+            telemetry.addData("Right Intake", rightIntake.getPosition());
+            telemetry.addData("Shooter Hood", shooterHood.getPosition());
+            telemetry.addData("Feeder", feeder.getPosition());
+            telemetry.update();
         }
-
     }
-
 }
