@@ -20,6 +20,10 @@ public final class MechanismController {
     private static final double FEEDER_DOWN = 0.3;
     private static final double FEEDER_UP = 0.05;
     private static final double BELLY_VELOCITY = 300;
+    // each press =+ 96 ticks/120 degrees
+    private static final int BELLY_INCREMENT = 96;
+    // max = 288 ticks (360 degrees)
+    private static final int MAX_POSITION = 288;
 
     private Telemetry telemetry;
 
@@ -32,6 +36,9 @@ public final class MechanismController {
     private Servo rightIntake;
     private Servo shooterHood;
     private Servo feeder;
+
+    private int bellyTargetPosition = 0;
+
 
     // The field must be declared volatile to ensure that changes to the
     // instance variable are immediately visible to all threads.
@@ -63,7 +70,9 @@ public final class MechanismController {
 
         shooterMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        bellyMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        bellyMotor.setTargetPosition(0);
+        bellyMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        bellyMotor.setPower(1.0);
         bellyMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -133,6 +142,18 @@ public final class MechanismController {
         bellyMotor.setVelocity(0);
      }
 
+     public void rotateBelly() {
+         bellyTargetPosition += BELLY_INCREMENT;
+
+//         // max position
+//         if (bellyTargetPosition > MAX_POSITION){
+//             bellyTargetPosition = MAX_POSITION;
+//         }
+        bellyMotor.setTargetPosition(bellyTargetPosition);
+     }
+
+
+
      public void startIntake() {
         intakeMotor.setPower(1);
      }
@@ -147,5 +168,7 @@ public final class MechanismController {
          telemetry.addData("Right Intake", rightIntake.getPosition());
          telemetry.addData("Shooter Hood", shooterHood.getPosition());
          telemetry.addData("Feeder", feeder.getPosition());
+         telemetry.addData("Belly Desired Pos", bellyTargetPosition);
+         telemetry.addData("Belly Current Pos", bellyMotor.getCurrentPosition());
      }
 }

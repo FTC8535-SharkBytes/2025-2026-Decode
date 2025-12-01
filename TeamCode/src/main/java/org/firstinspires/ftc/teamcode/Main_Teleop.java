@@ -27,6 +27,7 @@ public class Main_Teleop extends LinearOpMode {
     private double desiredVelocity = 0.9 * 100 * 28; // 90% of base target speed
     private boolean bIsPressed = false;
     private boolean xIsPressed = false;
+    private boolean yPressedLast = false;
 
     @Override
     public void runOpMode() {
@@ -99,10 +100,12 @@ public class Main_Teleop extends LinearOpMode {
             }
 
             // Belly motor controls
-            if (gamepad2.y) {
-                mechanismController.startBelly();
-            } else {
-                mechanismController.stopBelly();
+            if (gamepad2.y && !yPressedLast) {
+                mechanismController.rotateBelly();
+                yPressedLast = true;
+            } else if (!gamepad2.y && yPressedLast) {
+                yPressedLast = false;
+//                mechanismController.stopBelly();
             }
             //intake motor
             if (gamepad2.b) {
