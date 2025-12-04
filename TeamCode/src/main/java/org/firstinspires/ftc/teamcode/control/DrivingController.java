@@ -14,10 +14,42 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import java.util.Locale;
 
 public class DrivingController {
+    private static final double KP_AIM = 0.02;
+
     private DcMotor leftFrontDrive = null;
     private DcMotor leftBackDrive = null;
     private DcMotor rightFrontDrive = null;
     private DcMotor rightBackDrive = null;
+
+    private Telemetry telemetry;
+    GoBildaPinpointDriver odo; // Declare OpMode member for the Odometry Computer
+
+    public void init(HardwareMap hardwareMap, Telemetry telemetry, boolean zeroEncoders) {
+        this.telemetry = telemetry;
+        //Connect motors to irl motors
+        connectMotorsToHub(hardwareMap);
+        odo = hardwareMap.get(GoBildaPinpointDriver.class,"odo");
+        if (zeroEncoders) {
+            odo.resetPosAndIMU();
+        }
+
+        odo.setOffsets(32.0, 108.0, DistanceUnit.MM); //these are tuned for 3110-0002-0001 Product Insight #1
+        odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.FORWARD);
+
+        //set motor directions
+        setMotorDirections(zeroEncoders);
+
+    }
+
+    private void connectMotorsToHub(HardwareMap hardwareMap) {
+
+        leftFrontDrive  = hardwareMap.get(DcMotor.class, "left_front_drive");
+        leftBackDrive  = hardwareMap.get(DcMotor.class, "left_back_drive");
+        rightFrontDrive = hardwareMap.get(DcMotor.class, "right_front_drive");
+        rightBackDrive = hardwareMap.get(DcMotor.class, "right_back_drive");
+    }
+
     private void setMotorDirections(boolean zeroEncoders) {
 
         leftFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -41,16 +73,6 @@ public class DrivingController {
         rightFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
-    private void updateTelemetry(Telemetry telemetry) {
-        telemetry.addData("X offset", odo.getXOffset(DistanceUnit.MM));
-        telemetry.addData("Y offset", odo.getYOffset(DistanceUnit.MM));
-        telemetry.addData("Device Version Number:", odo.getDeviceVersion());
-        telemetry.addData("Device Scalar", odo.getYawScalar());
-        Pose2D pos = odo.getPosition();
-        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
-        telemetry.addData("Position", data);
-
-    }
 
     public void updateDriveCommands(double axial, double lateral,
                                     double yaw, boolean isFastMode) {
@@ -60,33 +82,35 @@ public class DrivingController {
         updateTelemetry(telemetry);
 
     }
-    private void connectMotorsToHub(HardwareMap hardwareMap) {
 
-        leftFrontDrive  = hardwareMap.get(DcMotor.class, "left_front_drive");
-        leftBackDrive  = hardwareMap.get(DcMotor.class, "left_back_drive");
-        rightFrontDrive = hardwareMap.get(DcMotor.class, "right_front_drive");
-        rightBackDrive = hardwareMap.get(DcMotor.class, "right_back_drive");
-    }
-    private Telemetry telemetry;
-    GoBildaPinpointDriver odo; // Declare OpMode member for the Odometry Computer
-    //idk what we are doing here
-    public void init(HardwareMap hardwareMap, Telemetry telemetry, boolean zeroEncoders) {
-        this.telemetry = telemetry;
-        //Connect motors to irl motors
-        connectMotorsToHub(hardwareMap);
-        odo = hardwareMap.get(GoBildaPinpointDriver.class,"odo");
-        odo.setOffsets(-84.0, -120.0, DistanceUnit.MM); //these are tuned for 3110-0002-0001 Product Insight #1
-        odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
+    public void updateDriveWithLimelight(double axial, double lateral,
+                                         double tx, boolean isFastMode) {
+        double yaw = KP_AIM * tx;
+        assignWheelPowers(computeWheelPower(axial, lateral, yaw, isFastMode));
 
-        if (zeroEncoders) {
-            odo.resetPosAndIMU();
-        }
-
-        //set motor directions
-        setMotorDirections(zeroEncoders);
 
     }
+
+    private void updateTelemetry(Telemetry telemetry) {
+        telemetry.addData("X Encoder", odo.getEncoderX());
+        telemetry.addData("Y Encoder", odo.getEncoderY());
+        telemetry.addData("Device Version Number:", odo.getDeviceVersion());
+        telemetry.addData("Device Scalar", odo.getYawScalar());
+        Pose2D pos = odo.getPosition();
+        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Position", data);
+
+    }
+
+    public void updateOdometry(){
+        odo.update();
+    }
+
+    public Pose2D getOdometryPosition(){
+        return odo.getPosition();
+    }
+
+
     private WheelPower computeWheelPower(double axial, double lateral,
                                          double yaw, boolean isFastMode) {
         double max;
@@ -125,24 +149,27 @@ public class DrivingController {
         }
         return new WheelPower(leftFrontPower, rightFrontPower, leftBackPower, rightBackPower);
     }
-    public static class WheelPower {
-        public final double leftFrontPower;
-        public final double rightFrontPower;
-        public final double leftBackPower;
-        public final double rightBackPower;
 
-        public WheelPower(double leftFrontPower, double rightFrontPower, double leftBackPower, double rightBackPower) {
-            this.leftFrontPower = leftFrontPower;
-            this.rightFrontPower = rightFrontPower;
-            this.leftBackPower = leftBackPower;
-            this.rightBackPower = rightBackPower;
-        }
-    }
     public void assignWheelPowers(WheelPower wheelPower) {
 
         leftFrontDrive.setPower(wheelPower.leftFrontPower);
         rightFrontDrive.setPower(wheelPower.rightFrontPower);
         leftBackDrive.setPower(wheelPower.leftBackPower);
         rightBackDrive.setPower(wheelPower.rightBackPower);
+    }
+
+
+    public static class WheelPower {
+        public final double leftFrontPower;
+        public final double rightFrontPower;
+        public final double leftBackPower;
+
+        public final double rightBackPower;
+        public WheelPower(double leftFrontPower, double rightFrontPower, double leftBackPower, double rightBackPower) {
+            this.leftFrontPower = leftFrontPower;
+            this.rightFrontPower = rightFrontPower;
+            this.leftBackPower = leftBackPower;
+            this.rightBackPower = rightBackPower;
+        }
     }
 }

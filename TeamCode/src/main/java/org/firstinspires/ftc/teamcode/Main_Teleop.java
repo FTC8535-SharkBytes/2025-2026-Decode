@@ -5,26 +5,21 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.control.DrivingController;
+import org.firstinspires.ftc.teamcode.control.LimelightController;
 import org.firstinspires.ftc.teamcode.control.MechanismController;
 
+/** @noinspection unused*/
 @TeleOp(name="Main TeleOp (Drive + Shooter + Servos)")
 public class Main_Teleop extends LinearOpMode {
 
     // --- Drive system ---
     private final DrivingController driveController = new DrivingController();
     private final MechanismController mechanismController = MechanismController.getInstance();
-
-    private LookupTable lookupTable = new LookupTable(
-            new double[]{1302, 1308.595, 1316.08, 1324.455, 1333.72, 1343.875, 1354.92, 1366.855, 1379.68, 1393.395, 1408, 1423.495, 1439.88, 1457.155, 1475.32, 1494.375, 1514.32, 1535.155, 1556.88, 1579.495,
-                    1603, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2302.195,
-                    2345.28},
-            20,
-            100
-    );
+    private final LimelightController limelightController = new LimelightController();
 
     private final ElapsedTime runtime = new ElapsedTime();
 
-    private double desiredVelocity = 0.9 * 100 * 28; // 90% of base target speed
+    private LimelightController.LimelightResult limelightResult;
     private boolean bIsPressed = false;
     private boolean xIsPressed = false;
     private boolean yPressedLast = false;
@@ -33,21 +28,35 @@ public class Main_Teleop extends LinearOpMode {
     public void runOpMode() {
 
         // --- Initialize drive ---
-        driveController.init(hardwareMap, telemetry, false);
+        driveController.init(hardwareMap, telemetry, true);
         mechanismController.init(hardwareMap, telemetry, false);
-
+        limelightController.init(hardwareMap, telemetry);
 
         waitForStart();
         runtime.reset();
+        limelightController.switchPipeline(1);
 
         while (opModeIsActive()) {
+            driveController.updateOdometry();
+            mechanismController.update();
+            limelightResult = limelightController.getLimelightTrackingResult();
+
             // --- Driving control (gamepad1 joysticks) ---
             double axial   = -gamepad1.left_stick_y;  // forward/back
             double lateral =  gamepad1.left_stick_x;  // strafe
             double yaw     =  gamepad1.right_stick_x; // turn
 
             boolean isFastMode = (gamepad1.right_trigger != 1);
-            driveController.updateDriveCommands(axial, lateral, yaw, isFastMode);
+            boolean isAimMode = (gamepad1.left_trigger > 0);
+            if (isAimMode) {
+                double tx = 0;
+                if (limelightResult.isValid) {
+                    tx = limelightResult.tx;
+                }
+                driveController.updateDriveWithLimelight(axial, lateral, tx, isFastMode);
+            } else {
+                driveController.updateDriveCommands(axial, lateral, yaw, isFastMode);
+            }
 
             // --- Servo controls (gamepad1 buttons) ---
             // Intake control
@@ -73,8 +82,9 @@ public class Main_Teleop extends LinearOpMode {
 
             // --- Shooter motor belly motor and intake motor control (gamepad2) ---
             if (gamepad2.x) {
-
-                mechanismController.setShooterVelocity(desiredVelocity);
+                if (limelightResult.isValid) {
+                    mechanismController.setShooterVelocityUsingLimelight(limelightResult.ta);
+                }
             }
             if (gamepad2.a) {
                 mechanismController.stopShooter();
@@ -83,8 +93,7 @@ public class Main_Teleop extends LinearOpMode {
             // Increase velocity
             if (gamepad2.right_trigger > 0.1 && !xIsPressed) {
                 xIsPressed = true;
-                desiredVelocity += 100;
-                mechanismController.setShooterVelocity(desiredVelocity);
+                mechanismController.increaseShooter();
             }
             if (gamepad2.right_trigger < 0.1 && xIsPressed) {
                 xIsPressed = false;
@@ -92,8 +101,7 @@ public class Main_Teleop extends LinearOpMode {
             // Decrease velocity
             if (gamepad2.left_trigger > 0.1 && !bIsPressed) {
                 bIsPressed = true;
-                desiredVelocity -= 100;
-                mechanismController.setShooterVelocity(desiredVelocity);
+                mechanismController.decreaseShooter();
             }
             if (gamepad2.left_trigger < 0.1 && bIsPressed) {
                 bIsPressed = false;
@@ -117,7 +125,6 @@ public class Main_Teleop extends LinearOpMode {
 
             // --- Telemetry ---
             telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Desired Velocity", desiredVelocity);
             mechanismController.updateTelemetry();
             telemetry.update();
         }
