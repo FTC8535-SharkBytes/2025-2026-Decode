@@ -15,15 +15,13 @@ public final class MechanismController {
     private static final double LEFTINTAKE_UP = 0.0;
     private static final double RIGHTINTAKE_UP = 0.0;
     private static final double RIGHTINTAKE_DOWN = 0.25;
-    private static final double SHOOTER_HOOD_UP = 0.31;
+    private static final double SHOOTER_HOOD_UP = 0.39;
     private static final double SHOOTER_HOOD_DOWN = 0.07;
     private static final double FEEDER_DOWN = 0.3;
     private static final double FEEDER_UP = 0.05;
     private static final double BELLY_VELOCITY = 300;
     // each press =+ 96 ticks/120 degrees
     private static final int BELLY_INCREMENT = 96;
-    // max = 288 ticks (360 degrees)
-    private static final int MAX_POSITION = 288;
 
     private Telemetry telemetry;
 
@@ -38,7 +36,9 @@ public final class MechanismController {
     private Servo feeder;
 
     private int bellyTargetPosition = 0;
+    private double desiredShooterVelocity = 0.9 * 100 * 28; // 90% of base target speed
 
+    private ArtifactSorter artifactSorter = new ArtifactSorter();
 
     // The field must be declared volatile to ensure that changes to the
     // instance variable are immediately visible to all threads.
@@ -63,6 +63,8 @@ public final class MechanismController {
     public void init(HardwareMap hardwareMap, Telemetry telemetry, boolean zeroEncoders) {
         this.telemetry = telemetry;
 
+        artifactSorter.init(hardwareMap, telemetry);
+
         // --- Initialize shooter hardware ---
         shooterMotor = hardwareMap.get(DcMotorEx.class, "shooter_motor");
         bellyMotor = hardwareMap.get(DcMotorEx.class, "belly_motor");
@@ -70,11 +72,15 @@ public final class MechanismController {
 
         shooterMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        bellyMotor.setTargetPosition(0);
+        bellyMotor.setTargetPosition(bellyTargetPosition);
         bellyMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         bellyMotor.setPower(1.0);
         bellyMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        if (zeroEncoders) {
+            zeroBellyEncoders();
+        }
 
         // --- Initialize servos ---
         leftIntake = hardwareMap.get(Servo.class, "left_intake_servo");
@@ -88,15 +94,13 @@ public final class MechanismController {
         shooterHood.setPosition(SHOOTER_HOOD_DOWN);
         feeder.setPosition(FEEDER_DOWN);
 
-        if (zeroEncoders) {
-            zeroBellyEncoders();
-        }
-
      }
 
      private void zeroBellyEncoders() {
         bellyMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        bellyMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        bellyMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        bellyMotor.setTargetPosition(0);
+        bellyTargetPosition = 0;
      }
 
      public void setIntakeUp() {
@@ -126,8 +130,28 @@ public final class MechanismController {
          feeder.setPosition(FEEDER_DOWN);
      }
 
-     public void setShooterVelocity(double velocity) {
-         shooterMotor.setVelocity(velocity);
+     public void setShooterVelocityUsingLimelight(double ta) {
+         double sqrt_ta = Math.sqrt(ta);
+         desiredShooterVelocity = 4182.0 - 4293.0 * sqrt_ta + 1600.0 * sqrt_ta * sqrt_ta;
+         startShooter();
+     }
+
+     public void increaseShooter() {
+        desiredShooterVelocity += 100;
+        startShooter();
+     }
+
+     public void decreaseShooter() {
+        desiredShooterVelocity -= 100;
+        startShooter();
+     }
+
+     public boolean isShooterAtSpeed() {
+        return Math.abs(shooterMotor.getVelocity() - desiredShooterVelocity) < 50;
+     }
+
+     public void startShooter() {
+        shooterMotor.setVelocity(desiredShooterVelocity);
      }
 
      public void stopShooter() {
@@ -145,14 +169,12 @@ public final class MechanismController {
      public void rotateBelly() {
          bellyTargetPosition += BELLY_INCREMENT;
 
-//         // max position
-//         if (bellyTargetPosition > MAX_POSITION){
-//             bellyTargetPosition = MAX_POSITION;
-//         }
         bellyMotor.setTargetPosition(bellyTargetPosition);
      }
 
-
+     public boolean isBellyAtTarget() {
+         return Math.abs(bellyMotor.getCurrentPosition() - bellyTargetPosition) < 10;
+     }
 
      public void startIntake() {
         intakeMotor.setPower(1);
@@ -162,13 +184,23 @@ public final class MechanismController {
         intakeMotor.setPower(0);
      }
 
+     public void update() {
+        if (bellyMotor.getCurrentPosition() > (bellyTargetPosition - BELLY_INCREMENT / 3)) {
+            artifactSorter.updateColors();
+        } else {
+            artifactSorter.clear();
+        }
+     }
+
      public void updateTelemetry() {
-         telemetry.addData("Shooter Velocity", shooterMotor.getVelocity());
+         telemetry.addData("Desired Shooter Velocity", desiredShooterVelocity);
+         telemetry.addData("Actual Shooter Velocity", shooterMotor.getVelocity());
          telemetry.addData("Left Intake", leftIntake.getPosition());
          telemetry.addData("Right Intake", rightIntake.getPosition());
          telemetry.addData("Shooter Hood", shooterHood.getPosition());
          telemetry.addData("Feeder", feeder.getPosition());
          telemetry.addData("Belly Desired Pos", bellyTargetPosition);
          telemetry.addData("Belly Current Pos", bellyMotor.getCurrentPosition());
+         artifactSorter.updateTelemetry();
      }
 }

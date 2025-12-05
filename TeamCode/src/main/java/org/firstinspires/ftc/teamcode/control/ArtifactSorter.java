@@ -5,10 +5,25 @@ import android.graphics.Color;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
+import java.util.Locale;
+
 public class ArtifactSorter {
 
+    public enum Pattern {
+        PPG,
+        PGP,
+        GPP,
+        NONE
+    }
+
+    private Telemetry telemetry;
+
     // artifact pattern: 0 - unknown, 1 - PPG, 2 - PGP, 3 - GPP
-    private int desiredPattern = 0;
+    private Pattern desiredPattern = Pattern.NONE;
 
     private ColorSensor color1;
     private ColorSensor color2;
@@ -28,7 +43,8 @@ public class ArtifactSorter {
         UNKNOWN
     }
 
-    public void init(HardwareMap hardwareMap) {
+    public void init(HardwareMap hardwareMap, Telemetry telemetry) {
+        this.telemetry = telemetry;
         color1 = hardwareMap.get(ColorSensor.class, "color1");
         color2 = hardwareMap.get(ColorSensor.class, "color2");
         color3 = hardwareMap.get(ColorSensor.class, "color3");
@@ -39,10 +55,30 @@ public class ArtifactSorter {
         Color.RGBToHSV(color2.red() * 8, color2.green() * 8, color2.blue() * 8, hsv2);
         Color.RGBToHSV(color3.red() * 8, color3.green() * 8, color3.blue() * 8, hsv3);
 
-        artifactColor1 = detectColor(hsv1);
-        artifactColor2 = detectColor(hsv2);
-        artifactColor3 = detectColor(hsv3);
+        ArtifactColor color = detectColor(hsv1);
+        if (color != ArtifactColor.UNKNOWN) {
+            artifactColor1 = color;
+        }
+        color = detectColor(hsv2);
+        if (color != ArtifactColor.UNKNOWN) {
+            artifactColor2 = color;
+        }
+        color = detectColor(hsv3);
+        if (color != ArtifactColor.UNKNOWN) {
+            artifactColor3 = color;
+        }
 
+    }
+
+    public void clear() {
+        artifactColor1 = ArtifactColor.UNKNOWN;
+        artifactColor2 = ArtifactColor.UNKNOWN;
+        artifactColor3 = ArtifactColor.UNKNOWN;
+    }
+
+    public void updateTelemetry() {
+        String data = String.format(Locale.US, "{%s, %s, %s}", artifactColor1, artifactColor2, artifactColor3);
+        telemetry.addData("Artifact Colors", data);
     }
 
     private ArtifactColor detectColor(float[] hsv) {
@@ -67,15 +103,15 @@ public class ArtifactSorter {
         return hue >= 155 && hue <= 170;
     }
 
-    public void setDesiredPattern(int pattern) {
+    public void setDesiredPattern(Pattern pattern) {
         this.desiredPattern = pattern;
     }
 
     public boolean shouldRotateBelly() {
         switch (desiredPattern) {
-            case 0:
+            case NONE:
                 return false;
-            case 1: // PPG
+            case PPG: // PPG
                 if (artifactColor1 == ArtifactColor.PURPLE &&
                         artifactColor2 == ArtifactColor.PURPLE &&
                         artifactColor3 == ArtifactColor.GREEN) {
@@ -105,7 +141,7 @@ public class ArtifactSorter {
                 } else {
                     return true;
                 }
-            case 2: // PGP
+            case PGP: // PGP
                 if (artifactColor1 == ArtifactColor.PURPLE &&
                         artifactColor2 == ArtifactColor.PURPLE &&
                         artifactColor3 == ArtifactColor.GREEN) {
@@ -135,7 +171,7 @@ public class ArtifactSorter {
                 } else {
                     return true;
                 }
-            case 3: // GPP
+            case GPP: // GPP
                 if (artifactColor1 == ArtifactColor.PURPLE &&
                         artifactColor2 == ArtifactColor.PURPLE &&
                         artifactColor3 == ArtifactColor.GREEN) {
