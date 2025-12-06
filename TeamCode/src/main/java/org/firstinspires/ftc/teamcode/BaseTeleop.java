@@ -68,9 +68,9 @@ public abstract class BaseTeleop extends LinearOpMode {
 
             // Feeder control
             if (gamepad1.b) {
-                mechanismController.setFeederUp();
-            } else {
-                mechanismController.setFeederDown();
+                mechanismController.setKickstandUp();
+            } else if (gamepad1.a) {
+                mechanismController.setKickstandDown();
             }
 
             // Shooter hood control

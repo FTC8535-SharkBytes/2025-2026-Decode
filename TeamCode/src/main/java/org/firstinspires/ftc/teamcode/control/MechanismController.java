@@ -18,6 +18,8 @@ public final class MechanismController {
     private static final double RIGHTINTAKE_DOWN = 0.25;
     private static final double SHOOTER_HOOD_UP = 0.39;
     private static final double SHOOTER_HOOD_DOWN = 0.07;
+    private static final double KICKSTAND_UP = 0.52;
+    private static final double KICKSTAND_DOWN = 0.24;
     private static final double FEEDER_DOWN = 0.3;
     private static final double FEEDER_UP = 0.05;
     private static final double BELLY_VELOCITY = 300;
@@ -41,6 +43,7 @@ public final class MechanismController {
     private Servo leftIntake;
     private Servo rightIntake;
     private Servo shooterHood;
+    private Servo kickstand;
     private Servo feeder;
 
     private int bellyTargetPosition = 0;
@@ -107,12 +110,14 @@ public final class MechanismController {
         rightIntake = hardwareMap.get(Servo.class, "right_intake_servo");
         shooterHood = hardwareMap.get(Servo.class, "shooter_hood_servo");
         feeder = hardwareMap.get(Servo.class, "feeder_servo");
+        kickstand = hardwareMap.get(Servo.class, "kickstand_servo");
 
         // set initial positions
         leftIntake.setPosition(LEFTINTAKE_UP);
         rightIntake.setPosition(RIGHTINTAKE_UP);
         shooterHood.setPosition(SHOOTER_HOOD_DOWN);
         feeder.setPosition(FEEDER_DOWN);
+        kickstand.setPosition(KICKSTAND_UP);
 
      }
 
@@ -140,6 +145,14 @@ public final class MechanismController {
 
      public void setHoodDown() {
          shooterHood.setPosition(SHOOTER_HOOD_DOWN);
+     }
+
+     public void setKickstandUp() {
+         kickstand.setPosition(KICKSTAND_UP);
+     }
+
+     public void setKickstandDown() {
+         kickstand.setPosition(KICKSTAND_DOWN);
      }
 
      public void setFeederUp() {
