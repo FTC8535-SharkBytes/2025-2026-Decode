@@ -44,7 +44,7 @@ public final class MechanismController {
     private Servo feeder;
 
     private int bellyTargetPosition = 0;
-    private double desiredShooterVelocity = 0.9 * 100 * 28; // 90% of base target speed
+    private double desiredShooterVelocity = 1900; // 90% of base target speed
 
     private ArtifactSorter artifactSorter = new ArtifactSorter();
 
@@ -152,7 +152,8 @@ public final class MechanismController {
 
      public void setShooterVelocityUsingLimelight(double ta) {
          double sqrt_ta = Math.sqrt(ta);
-         desiredShooterVelocity = 4182.0 - 4293.0 * sqrt_ta + 1600.0 * sqrt_ta * sqrt_ta;
+//         desiredShooterVelocity = 4182.0 - 4293.0 * sqrt_ta + 1600.0 * sqrt_ta * sqrt_ta;
+         desiredShooterVelocity = 2768.0 - 2052.0 * sqrt_ta + 705.0 * sqrt_ta * sqrt_ta;
          startShooter();
      }
 
