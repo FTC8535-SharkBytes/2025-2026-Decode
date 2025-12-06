@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -22,6 +23,13 @@ public final class MechanismController {
     private static final double BELLY_VELOCITY = 300;
     // each press =+ 96 ticks/120 degrees
     private static final int BELLY_INCREMENT = 96;
+
+    public static final double NEW_BELLY_ENC_P = 40.0;
+    public static final double NEW_BELLY_ENC_I = 0.0; // Orig 3.0
+    public static final double NEW_BELLY_ENC_D = -0.01;
+    public static final double NEW_BELLY_ENC_F = 0.0;
+
+    public static final double NEW_BELLY_POS_P = 40.0;
 
     private Telemetry telemetry;
 
@@ -43,6 +51,11 @@ public final class MechanismController {
     // The field must be declared volatile to ensure that changes to the
     // instance variable are immediately visible to all threads.
     private static volatile MechanismController instance;
+    private PIDFCoefficients pidfBellyEncOrig;
+    private PIDFCoefficients pidfBellyPosOrig;
+    private PIDFCoefficients pidfBellyEncModified;
+    private PIDFCoefficients pidfBellyPosModified;
+
 
     // Private constructor to prevent direct instantiation
     private MechanismController() {}
@@ -74,6 +87,13 @@ public final class MechanismController {
         shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         bellyMotor.setTargetPosition(bellyTargetPosition);
         bellyMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        pidfBellyEncOrig = bellyMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
+        pidfBellyPosOrig = bellyMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION);
+        bellyMotor.setVelocityPIDFCoefficients(NEW_BELLY_ENC_P, NEW_BELLY_ENC_I, NEW_BELLY_ENC_D, NEW_BELLY_ENC_F);
+        pidfBellyEncModified = bellyMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
+        bellyMotor.setPositionPIDFCoefficients(NEW_BELLY_POS_P);
+        pidfBellyPosModified = bellyMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION);
+
         bellyMotor.setPower(1.0);
         bellyMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -158,18 +178,16 @@ public final class MechanismController {
         shooterMotor.setVelocity(0);
      }
 
-     public void startBelly() {
-        bellyMotor.setVelocity(BELLY_VELOCITY);
-     }
-
-     public void stopBelly() {
-        bellyMotor.setVelocity(0);
-     }
-
      public void rotateBelly() {
          bellyTargetPosition += BELLY_INCREMENT;
 
-        bellyMotor.setTargetPosition(bellyTargetPosition);
+         bellyMotor.setTargetPosition(bellyTargetPosition);
+     }
+
+     public void reverseBelly() {
+         bellyTargetPosition -= BELLY_INCREMENT;
+
+         bellyMotor.setTargetPosition(bellyTargetPosition);
      }
 
      public boolean isBellyAtTarget() {
@@ -178,6 +196,10 @@ public final class MechanismController {
 
      public void startIntake() {
         intakeMotor.setPower(1);
+     }
+
+     public void reverseIntake() {
+        intakeMotor.setPower(-1);
      }
 
      public void stopIntake() {
@@ -199,6 +221,14 @@ public final class MechanismController {
          telemetry.addData("Right Intake", rightIntake.getPosition());
          telemetry.addData("Shooter Hood", shooterHood.getPosition());
          telemetry.addData("Feeder", feeder.getPosition());
+         telemetry.addData("P,I,D,F Enc (orig)", "%.04f, %.04f, %.04f, %.04f",
+                 pidfBellyEncOrig.p, pidfBellyEncOrig.i, pidfBellyEncOrig.d, pidfBellyEncOrig.f);
+         telemetry.addData("P,I,D,F Enc (mod)", "%.04f, %.04f, %.04f, %.04f",
+                 pidfBellyEncModified.p, pidfBellyEncModified.i, pidfBellyEncModified.d, pidfBellyEncModified.f);
+         telemetry.addData("P,I,D,F Pos (orig)", "%.04f, %.04f, %.04f, %.04f",
+                 pidfBellyPosOrig.p, pidfBellyPosOrig.i, pidfBellyPosOrig.d, pidfBellyPosOrig.f);
+         telemetry.addData("P,I,D,F Pos (mod)", "%.04f, %.04f, %.04f, %.04f",
+                 pidfBellyPosModified.p, pidfBellyPosModified.i, pidfBellyPosModified.d, pidfBellyPosModified.f);
          telemetry.addData("Belly Desired Pos", bellyTargetPosition);
          telemetry.addData("Belly Current Pos", bellyMotor.getCurrentPosition());
          artifactSorter.updateTelemetry();
