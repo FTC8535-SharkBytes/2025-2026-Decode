@@ -170,6 +170,11 @@ public final class MechanismController {
         return Math.abs(shooterMotor.getVelocity() - desiredShooterVelocity) < 50;
      }
 
+     public void setShooterVelocity(double velocity) {
+        desiredShooterVelocity = velocity;
+        startShooter();
+     }
+
      public void startShooter() {
         shooterMotor.setVelocity(desiredShooterVelocity);
      }
