@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.control.DrivingController;
@@ -9,8 +8,9 @@ import org.firstinspires.ftc.teamcode.control.LimelightController;
 import org.firstinspires.ftc.teamcode.control.MechanismController;
 
 /** @noinspection unused*/
-@TeleOp(name="Main TeleOp (Drive + Shooter + Servos)")
-public class Main_Teleop extends LinearOpMode {
+public abstract class BaseTeleop extends LinearOpMode {
+
+    protected abstract int getGoalPipeline();
 
     // --- Drive system ---
     private final DrivingController driveController = new DrivingController();
@@ -34,7 +34,7 @@ public class Main_Teleop extends LinearOpMode {
 
         waitForStart();
         runtime.reset();
-        limelightController.switchPipeline(1);
+        limelightController.switchPipeline(getGoalPipeline());
 
         while (opModeIsActive()) {
             driveController.updateOdometry();
@@ -68,9 +68,9 @@ public class Main_Teleop extends LinearOpMode {
 
             // Feeder control
             if (gamepad1.b) {
-                mechanismController.setFeederUp();
-            } else {
-                mechanismController.setFeederDown();
+                mechanismController.setKickstandUp();
+            } else if (gamepad1.a) {
+                mechanismController.setKickstandDown();
             }
 
             // Shooter hood control
@@ -109,7 +109,11 @@ public class Main_Teleop extends LinearOpMode {
 
             // Belly motor controls
             if (gamepad2.y && !yPressedLast) {
-                mechanismController.rotateBelly();
+                if (gamepad2.back) {
+                    mechanismController.reverseBelly();
+                } else {
+                    mechanismController.rotateBelly();
+                }
                 yPressedLast = true;
             } else if (!gamepad2.y && yPressedLast) {
                 yPressedLast = false;
@@ -117,7 +121,11 @@ public class Main_Teleop extends LinearOpMode {
             }
             //intake motor
             if (gamepad2.b) {
-                mechanismController.startIntake();
+                if (gamepad2.back) {
+                    mechanismController.reverseIntake();
+                } else {
+                    mechanismController.startIntake();
+                    }
             }
             else {
                 mechanismController.stopIntake();

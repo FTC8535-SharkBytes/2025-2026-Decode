@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -13,8 +14,9 @@ import org.firstinspires.ftc.teamcode.control.MechanismController;
 import org.firstinspires.ftc.teamcode.navigation.DriveToPoint;
 
 /** @noinspection unused*/
-@Autonomous(name="AutoRedShootAndMove", group="Autonomous", preselectTeleOp = "Main_Teleop")
-public class AutoRedShootAndMove extends LinearOpMode {
+@Autonomous(name="AutoRedShootAndMove", group="Autonomous", preselectTeleOp = "RedTeleop")
+@Disabled
+public class AutoOdoRedShootAndMove extends LinearOpMode {
     private final DrivingController driveController = new DrivingController();
     private final MechanismController mechanismController = MechanismController.getInstance();
     private final LimelightController limelightController = new LimelightController();

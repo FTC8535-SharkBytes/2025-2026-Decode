@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.nisastuff;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -9,6 +10,7 @@ import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import java.util.Locale;
 
 @TeleOp(name="Color Sensor Practice", group = "Sensor")
+@Disabled
 public class colorsensor_practice extends LinearOpMode {
 
     NormalizedColorSensor colorSensor;
