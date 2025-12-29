@@ -421,22 +421,22 @@ public class GoBildaPrismConfigurator extends LinearOpMode {
     public void configureEndPoints(){
         if(gamepad1.dpadLeftWasPressed()){
             startPoint -= 1;
-            startPoint = Math.min(Math.min(255,Math.max(0,startPoint)),endPoint-1);
+            startPoint = Math.min(Math.min(255,Math.max(0,startPoint)),endPoint);
             configureEndpointsAnimation(false);
         }
         if(gamepad1.dpadRightWasPressed()){
             startPoint += 1;
-            startPoint = Math.min(Math.min(255,Math.max(0,startPoint)),endPoint-1);
+            startPoint = Math.min(Math.min(255,Math.max(0,startPoint)),endPoint);
             configureEndpointsAnimation(false);
         }
         if(gamepad1.leftBumperWasPressed()){
             endPoint -= 1;
-            endPoint = Math.max(Math.min(255,Math.max(0,endPoint)),startPoint+1);
+            endPoint = Math.max(Math.min(255,Math.max(0,endPoint)),startPoint);
             configureEndpointsAnimation(false);
         }
         if(gamepad1.rightBumperWasPressed()){
             endPoint += 1;
-            endPoint = Math.max(Math.min(255,Math.max(0,endPoint)),startPoint+1);
+            endPoint = Math.max(Math.min(255,Math.max(0,endPoint)),startPoint);
             configureEndpointsAnimation(false);
         }
 
