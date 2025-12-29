@@ -13,6 +13,7 @@ import java.util.Locale;
 
 public class ArtifactSorter {
 
+
     public enum Pattern {
         PPG,
         PGP,
@@ -50,7 +51,15 @@ public class ArtifactSorter {
         color3 = hardwareMap.get(ColorSensor.class, "color3");
     }
 
-    public void updateColors() {
+    public void updateColors(int bellyPos) {
+        int bellyMod = bellyPos % MechanismController.BELLY_INCREMENT;
+
+        if (bellyMod > 10 && bellyMod < 50){
+            artifactColor1 = ArtifactColor.UNKNOWN;
+            artifactColor2 = ArtifactColor.UNKNOWN;
+            artifactColor3 = ArtifactColor.UNKNOWN;
+            return;
+        }
         Color.RGBToHSV(color1.red() * 8, color1.green() * 8, color1.blue() * 8, hsv1);
         Color.RGBToHSV(color2.red() * 8, color2.green() * 8, color2.blue() * 8, hsv2);
         Color.RGBToHSV(color3.red() * 8, color3.green() * 8, color3.blue() * 8, hsv3);
@@ -203,6 +212,26 @@ public class ArtifactSorter {
                 }
         }
         return false;
+    }
+
+    public void updateLeds(LEDController ledController) {
+        updateArtfactColor(ledController, artifactColor1, 4);
+        updateArtfactColor(ledController, artifactColor2, 3);
+        updateArtfactColor(ledController, artifactColor3, 2);
+    }
+
+    private void updateArtfactColor(LEDController ledController, ArtifactColor color, int index) {
+        switch (color) {
+            case PURPLE:
+                ledController.setLedColor(index, org.firstinspires.ftc.teamcode.Prism.Color.PURPLE);
+                break;
+            case GREEN:
+                ledController.setLedColor(index, org.firstinspires.ftc.teamcode.Prism.Color.GREEN);
+                break;
+            default:
+                ledController.setLedColor(index, org.firstinspires.ftc.teamcode.Prism.Color.YELLOW);
+                break;
+        }
     }
 
 }

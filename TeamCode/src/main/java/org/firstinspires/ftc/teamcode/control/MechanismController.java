@@ -25,7 +25,7 @@ public final class MechanismController {
 
     private static final double BELLY_VELOCITY = 300;
     // each press =+ 96 ticks/120 degrees
-    private static final int BELLY_INCREMENT = 96;
+    public static final int BELLY_INCREMENT = 96;
 
     public static final double NEW_BELLY_ENC_P = 40.0;
     public static final double NEW_BELLY_ENC_I = 0.0; // Orig 3.0
@@ -33,6 +33,8 @@ public final class MechanismController {
     public static final double NEW_BELLY_ENC_F = 0.0;
 
     public static final double NEW_BELLY_POS_P = 40.0;
+
+    private LEDController ledController = new LEDController();
 
     private Telemetry telemetry;
 
@@ -80,6 +82,7 @@ public final class MechanismController {
     public void init(HardwareMap hardwareMap, Telemetry telemetry, boolean zeroEncoders) {
         this.telemetry = telemetry;
 
+        ledController.init(hardwareMap, telemetry);
         artifactSorter.init(hardwareMap, telemetry);
 
         // --- Initialize shooter hardware ---
@@ -221,11 +224,10 @@ public final class MechanismController {
      }
 
      public void update() {
-        if (bellyMotor.getCurrentPosition() > (bellyTargetPosition - BELLY_INCREMENT / 3)) {
-            artifactSorter.updateColors();
-        } else {
-            artifactSorter.clear();
-        }
+
+        artifactSorter.updateColors(bellyMotor.getCurrentPosition());
+        artifactSorter.updateLeds(ledController);
+
      }
 
      public void updateTelemetry() {

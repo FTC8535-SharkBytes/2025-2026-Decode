@@ -8,7 +8,6 @@ import org.firstinspires.ftc.teamcode.Prism.Color;
 import org.firstinspires.ftc.teamcode.control.LEDController;
 
 @TeleOp
-@Disabled
 public class LEDTestOpMode extends LinearOpMode {
     LEDController ledController = new LEDController();
     @Override
