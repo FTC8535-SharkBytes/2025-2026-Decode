@@ -14,17 +14,18 @@ public final class MechanismController {
     // Servo positions
     private static final double LEFTINTAKE_DOWN = 0.25;
     private static final double LEFTINTAKE_UP = 0.0;
-    private static final double RIGHTINTAKE_UP = 0.0;
-    private static final double RIGHTINTAKE_DOWN = 0.25;
+    //private static final double RIGHTINTAKE_UP = 0.0;
+    //private static final double RIGHTINTAKE_DOWN = 0.25;
     private static final double SHOOTER_HOOD_UP = 0.39;
     private static final double SHOOTER_HOOD_DOWN = 0.07;
-    private static final double KICKSTAND_UP = 0.52;
-    private static final double KICKSTAND_DOWN = 0.24;
-    private static final double FEEDER_DOWN = 0.3;
-    private static final double FEEDER_UP = 0.05;
+    private static final double LEFT_KICKSTAND_UP = 0.5;
+    private static final double LEFT_KICKSTAND_DOWN = 0.22;
+    private static final double RIGHT_KICKSTAND_UP = 0.585;
+    private static final double RIGHT_KICKSTAND_DOWN = 0.305;
+
     private static final double BELLY_VELOCITY = 300;
     // each press =+ 96 ticks/120 degrees
-    private static final int BELLY_INCREMENT = 96;
+    public static final int BELLY_INCREMENT = 96;
 
     public static final double NEW_BELLY_ENC_P = 40.0;
     public static final double NEW_BELLY_ENC_I = 0.0; // Orig 3.0
@@ -32,6 +33,8 @@ public final class MechanismController {
     public static final double NEW_BELLY_ENC_F = 0.0;
 
     public static final double NEW_BELLY_POS_P = 40.0;
+
+    private LEDController ledController = new LEDController();
 
     private Telemetry telemetry;
 
@@ -41,10 +44,10 @@ public final class MechanismController {
     private DcMotorEx bellyMotor = null;
     // --- Servo system ---
     private Servo leftIntake;
-    private Servo rightIntake;
     private Servo shooterHood;
-    private Servo kickstand;
-    private Servo feeder;
+    private Servo leftkickstand;
+    private Servo rightkickstand;
+
 
     private int bellyTargetPosition = 0;
     private double desiredShooterVelocity = 1900; // 90% of base target speed
@@ -79,6 +82,7 @@ public final class MechanismController {
     public void init(HardwareMap hardwareMap, Telemetry telemetry, boolean zeroEncoders) {
         this.telemetry = telemetry;
 
+        ledController.init(hardwareMap, telemetry);
         artifactSorter.init(hardwareMap, telemetry);
 
         // --- Initialize shooter hardware ---
@@ -106,18 +110,17 @@ public final class MechanismController {
         }
 
         // --- Initialize servos ---
-        leftIntake = hardwareMap.get(Servo.class, "left_intake_servo");
-        rightIntake = hardwareMap.get(Servo.class, "right_intake_servo");
+        leftIntake = hardwareMap.get(Servo.class, "intake_servo");
         shooterHood = hardwareMap.get(Servo.class, "shooter_hood_servo");
-        feeder = hardwareMap.get(Servo.class, "feeder_servo");
-        kickstand = hardwareMap.get(Servo.class, "kickstand_servo");
+        leftkickstand = hardwareMap.get(Servo.class, "left_kickstand_servo");
+        rightkickstand = hardwareMap.get(Servo.class, "right_kickstand_servo");
 
         // set initial positions
         leftIntake.setPosition(LEFTINTAKE_UP);
-        rightIntake.setPosition(RIGHTINTAKE_UP);
         shooterHood.setPosition(SHOOTER_HOOD_DOWN);
-        feeder.setPosition(FEEDER_DOWN);
-        kickstand.setPosition(KICKSTAND_UP);
+        leftkickstand.setPosition(LEFT_KICKSTAND_UP);
+        rightkickstand.setPosition(RIGHT_KICKSTAND_UP);
+
 
      }
 
@@ -130,12 +133,12 @@ public final class MechanismController {
 
      public void setIntakeUp() {
         leftIntake.setPosition(LEFTINTAKE_UP);
-        rightIntake.setPosition(RIGHTINTAKE_UP);
+
      }
 
      public void setIntakeDown() {
          leftIntake.setPosition(LEFTINTAKE_DOWN);
-         rightIntake.setPosition(RIGHTINTAKE_DOWN);
+
          setHoodDown();
      }
 
@@ -148,20 +151,15 @@ public final class MechanismController {
      }
 
      public void setKickstandUp() {
-         kickstand.setPosition(KICKSTAND_UP);
+         leftkickstand.setPosition(LEFT_KICKSTAND_UP);
+         rightkickstand.setPosition(RIGHT_KICKSTAND_UP);
      }
 
      public void setKickstandDown() {
-         kickstand.setPosition(KICKSTAND_DOWN);
+         leftkickstand.setPosition(LEFT_KICKSTAND_DOWN);
+         rightkickstand.setPosition(RIGHT_KICKSTAND_DOWN);
      }
 
-     public void setFeederUp() {
-         feeder.setPosition(FEEDER_UP);
-     }
-
-     public void setFeederDown() {
-         feeder.setPosition(FEEDER_DOWN);
-     }
 
      public void setShooterVelocityUsingLimelight(double ta) {
          double sqrt_ta = Math.sqrt(ta);
@@ -226,20 +224,17 @@ public final class MechanismController {
      }
 
      public void update() {
-        if (bellyMotor.getCurrentPosition() > (bellyTargetPosition - BELLY_INCREMENT / 3)) {
-            artifactSorter.updateColors();
-        } else {
-            artifactSorter.clear();
-        }
+
+        artifactSorter.updateColors(bellyMotor.getCurrentPosition());
+        artifactSorter.updateLeds(ledController);
+
      }
 
      public void updateTelemetry() {
          telemetry.addData("Desired Shooter Velocity", desiredShooterVelocity);
          telemetry.addData("Actual Shooter Velocity", shooterMotor.getVelocity());
          telemetry.addData("Left Intake", leftIntake.getPosition());
-         telemetry.addData("Right Intake", rightIntake.getPosition());
          telemetry.addData("Shooter Hood", shooterHood.getPosition());
-         telemetry.addData("Feeder", feeder.getPosition());
          telemetry.addData("P,I,D,F Enc (orig)", "%.04f, %.04f, %.04f, %.04f",
                  pidfBellyEncOrig.p, pidfBellyEncOrig.i, pidfBellyEncOrig.d, pidfBellyEncOrig.f);
          telemetry.addData("P,I,D,F Enc (mod)", "%.04f, %.04f, %.04f, %.04f",
