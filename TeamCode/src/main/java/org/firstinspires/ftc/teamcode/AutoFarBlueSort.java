@@ -19,6 +19,8 @@ public class AutoFarBlueSort extends LinearOpMode {
 
     enum StateMachine {
         READ_LIMELIGHT,
+        TURN_TOWARD_GOAL,
+        AIM_TOWARD_GOAL,
         WAIT_FOR_SORT,
         START_SHOOTER,
         SHOOT_1,
@@ -40,9 +42,9 @@ public class AutoFarBlueSort extends LinearOpMode {
         stateMachine = StateMachine.READ_LIMELIGHT;
 
         // Wait for the game to start (driver presses START)
+        limelightController.switchPipeline(0);
         waitForStart();
         resetRuntime();
-        limelightController.switchPipeline(0);
 
         while (opModeIsActive()) {
             driveController.updateOdometry();
@@ -61,9 +63,40 @@ public class AutoFarBlueSort extends LinearOpMode {
                                 mechanismController.rotateBelly();
                                 break;
                         }
-                        stateMachine = StateMachine.WAIT_FOR_SORT;
+                        limelightController.switchPipeline(1);
+                        stateMachine = StateMachine.TURN_TOWARD_GOAL;
                         runtime.reset();
                     }
+                    break;
+                case TURN_TOWARD_GOAL://numbers might need changed and is team dependant
+                    if (runtime.seconds() < 0.2) {
+                        driveController.updateDriveCommands(0, 0, -0.5, true);
+                    } else {
+                        driveController.updateDriveCommands(0, 0, 0, true);
+                        stateMachine = StateMachine.AIM_TOWARD_GOAL;
+                        runtime.reset();
+                    }
+                    break;
+                case AIM_TOWARD_GOAL:
+                    if (runtime.seconds() > 1.0) {
+                        driveController.updateDriveCommands(0, 0, 0, true);
+                        stateMachine = StateMachine.WAIT_FOR_SORT;
+                        runtime.reset();
+                    } else {
+                        LimelightController.LimelightResult limelightResult
+                                = limelightController.getLimelightTrackingResult();
+                        if (limelightResult.isValid) {
+                            double tx = limelightResult.tx;
+                            driveController.updateDriveWithLimelight(0, 0, tx, true);
+                            if (tx < 0.1 && tx > -0.1) {//numbers might need changed
+                                driveController.updateDriveCommands(0, 0, 0, true);
+
+                                stateMachine = StateMachine.WAIT_FOR_SORT;
+                                runtime.reset();
+                            }
+                        }
+                    }
+
                     break;
                 case WAIT_FOR_SORT:
                     if (mechanismController.isBellyAtTarget()) {
