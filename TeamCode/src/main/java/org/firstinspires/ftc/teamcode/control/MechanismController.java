@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.Prism.Color;
 
 public final class MechanismController {
 
@@ -227,6 +228,12 @@ public final class MechanismController {
 
         artifactSorter.updateColors(bellyMotor.getCurrentPosition());
         artifactSorter.updateLeds(ledController);
+
+        if (isShooterAtSpeed() && shooterMotor.getVelocity() > 100) {
+            ledController.setLedColor(0, Color.RED);
+        } else {
+            ledController.setLedColor(0, Color.BLUE);
+        }
 
      }
 
