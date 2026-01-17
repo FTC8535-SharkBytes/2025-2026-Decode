@@ -93,6 +93,8 @@ public final class MechanismController {
 
         shooterMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(60, 0, 0, 14.247);
+        shooterMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
         bellyMotor.setTargetPosition(bellyTargetPosition);
         bellyMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         pidfBellyEncOrig = bellyMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
