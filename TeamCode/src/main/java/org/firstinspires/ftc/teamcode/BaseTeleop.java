@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.control.DrivingController;
+import org.firstinspires.ftc.teamcode.control.HuskyLensController;
 import org.firstinspires.ftc.teamcode.control.LimelightController;
 import org.firstinspires.ftc.teamcode.control.MechanismController;
 
@@ -16,10 +17,12 @@ public abstract class BaseTeleop extends LinearOpMode {
     private final DrivingController driveController = new DrivingController();
     private final MechanismController mechanismController = MechanismController.getInstance();
     private final LimelightController limelightController = new LimelightController();
+    private final HuskyLensController huskyLensController = new HuskyLensController();
 
     private final ElapsedTime runtime = new ElapsedTime();
 
     private LimelightController.LimelightResult limelightResult;
+    private HuskyLensController.HuskyLensResult huskyLensResult;
     private boolean bIsPressed = false;
     private boolean xIsPressed = false;
     private boolean yPressedLast = false;
@@ -31,6 +34,7 @@ public abstract class BaseTeleop extends LinearOpMode {
         driveController.init(hardwareMap, telemetry, true);
         mechanismController.init(hardwareMap, telemetry, false);
         limelightController.init(hardwareMap, telemetry);
+        huskyLensController.init(hardwareMap, telemetry);
 
         waitForStart();
         runtime.reset();
@@ -40,6 +44,7 @@ public abstract class BaseTeleop extends LinearOpMode {
             driveController.updateOdometry();
             mechanismController.update();
             limelightResult = limelightController.getLimelightTrackingResult();
+            huskyLensResult = huskyLensController.getTrackingResult();
 
             // --- Driving control (gamepad1 joysticks) ---
             double axial   = -gamepad1.left_stick_y;  // forward/back
@@ -47,11 +52,18 @@ public abstract class BaseTeleop extends LinearOpMode {
             double yaw     =  gamepad1.right_stick_x; // turn
 
             boolean isFastMode = (gamepad1.right_trigger != 1);
-            boolean isAimMode = (gamepad1.left_trigger > 0);
-            if (isAimMode) {
+            boolean isShooterAimMode = (gamepad1.left_trigger > 0);
+            boolean isArtifactAimMode = gamepad1.left_bumper;
+            if (isShooterAimMode) {
                 double tx = 0;
                 if (limelightResult.isValid) {
                     tx = limelightResult.tx;
+                }
+                driveController.updateDriveWithLimelight(axial, lateral, tx, isFastMode);
+            } else if (isArtifactAimMode) {
+                double tx = 0;
+                if (huskyLensResult.isValid) {
+                    tx = huskyLensResult.tx;
                 }
                 driveController.updateDriveWithLimelight(axial, lateral, tx, isFastMode);
             } else {
