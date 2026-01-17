@@ -20,9 +20,9 @@ public final class MechanismController {
     private static final double SHOOTER_HOOD_UP = 0.39;
     private static final double SHOOTER_HOOD_DOWN = 0.07;
     private static final double LEFT_KICKSTAND_UP = 0.5;
-    private static final double LEFT_KICKSTAND_DOWN = 0.22;
-    private static final double RIGHT_KICKSTAND_UP = 0.585;
-    private static final double RIGHT_KICKSTAND_DOWN = 0.305;
+    private static final double LEFT_KICKSTAND_DOWN = 0.21;
+    private static final double RIGHT_KICKSTAND_UP = 0.295;
+    private static final double RIGHT_KICKSTAND_DOWN = 0.585;
 
     private static final double BELLY_VELOCITY = 300;
     // each press =+ 96 ticks/120 degrees
