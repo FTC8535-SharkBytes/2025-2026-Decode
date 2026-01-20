@@ -20,9 +20,9 @@ public final class MechanismController {
     private static final double SHOOTER_HOOD_UP = 0.39;
     private static final double SHOOTER_HOOD_DOWN = 0.07;
     private static final double LEFT_KICKSTAND_UP = 0.5;
-    private static final double LEFT_KICKSTAND_DOWN = 0.22;
-    private static final double RIGHT_KICKSTAND_UP = 0.585;
-    private static final double RIGHT_KICKSTAND_DOWN = 0.305;
+    private static final double LEFT_KICKSTAND_DOWN = 0.24;
+    private static final double RIGHT_KICKSTAND_UP = 0.295;
+    private static final double RIGHT_KICKSTAND_DOWN = 0.555;
 
     private static final double BELLY_VELOCITY = 300;
     // each press =+ 96 ticks/120 degrees
@@ -93,6 +93,8 @@ public final class MechanismController {
 
         shooterMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(60, 0, 0, 14.247);
+        shooterMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
         bellyMotor.setTargetPosition(bellyTargetPosition);
         bellyMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         pidfBellyEncOrig = bellyMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
